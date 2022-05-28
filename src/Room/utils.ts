@@ -1,4 +1,4 @@
-import type { Room } from ".";
+import type Room from ".";
 
 // Closes down all connections
 async function closeAll(room: Room, message = "Room deleted") {

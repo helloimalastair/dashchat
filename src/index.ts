@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cookie } from "hono/cookie";
 import Identify from "./Identify";
 import WSUpgrade from "./WSUpgrade";
+import Create from "./Create";
 
 const app = new Hono<Environment>();
 
@@ -12,7 +13,7 @@ app.use("/rooms", cookie());
 app.get("/identify", Identify);
 
 // Create Room
-
+app.post("/create", Create);
 
 // Upgrade to WebSocket
 app.get("/rooms/:id", WSUpgrade);
@@ -21,5 +22,5 @@ app.get("/rooms/:id", WSUpgrade);
 app.all("/*", async ({req}) => fetch(req));
 
 export default app;
-
-export { Room } from "./Room";
+export { default as Room } from "./Room";
+export { default as Analytics } from "./Analytics";

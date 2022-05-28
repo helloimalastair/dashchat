@@ -1,7 +1,8 @@
+import analyticsUpdate from "./AnalyticsUpdate";
 import handleMessage from "./MessageHandler";
 import { closeAll } from "./utils";
 
-export class Room {
+export default class Room {
   ids: IDs;
   storage: DurableObjectStorage;
   blockConcurrencyWhile: DurableObjectState["blockConcurrencyWhile"];
@@ -88,6 +89,7 @@ export class Room {
       return await this.storage.deleteAll();
     }
     await this.storage.put("log", this.log);
-    // To Be Implemented: analyticsUpdate(this);
+    analyticsUpdate(this);
+    await this.storage.setAlarm(Date.now() + 60000);
   }
 }
