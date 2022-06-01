@@ -1,8 +1,7 @@
 import { Hono } from "hono";
 import { cookie } from "hono/cookie";
-import Identify from "./Identify";
-import WSUpgrade from "./WSUpgrade";
-import Create from "./Create";
+import { createRoom, identifyUser, upgradeToWebSocket } from "routes";
+import { awaitReady } from "Stream";
 
 const app = new Hono<Environment>();
 
@@ -10,17 +9,20 @@ const app = new Hono<Environment>();
 app.use("/rooms", cookie());
 
 // Add Username
-app.get("/identify", Identify);
+app.get("/identify", identifyUser);
 
 // Create Room
-app.post("/create", Create);
+app.post("/create", createRoom);
+
+// Wait for Upload/Processing to finish
+app.get("/processing/:id", awaitReady);
 
 // Upgrade to WebSocket
-app.get("/rooms/:id", WSUpgrade);
+app.get("/rooms/:id", upgradeToWebSocket);
 
 // Fallback, routes requests to Pages "backend"
 app.all("/*", async ({req}) => fetch(req));
 
 export default app;
-export { default as Room } from "./Room";
-export { default as Analytics } from "./Analytics";
+export { Room } from "Room";
+export { Analytics } from "Analytics";

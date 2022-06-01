@@ -1,1 +1,0 @@
-export default /^[a-zA-Z0-9]{5,50}$/;

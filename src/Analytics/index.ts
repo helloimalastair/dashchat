@@ -1,4 +1,4 @@
-export default class Analytics {
+export class Analytics {
   private readonly blockConcurrencyWhile: DurableObjectState["blockConcurrencyWhile"];
   private readonly storage: DurableObjectState["storage"];
   private readonly prefix: string;

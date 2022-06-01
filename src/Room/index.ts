@@ -1,8 +1,9 @@
+import { generateErrorResponse, usernameDoesNotExist } from "utils";
 import analyticsUpdate from "./AnalyticsUpdate";
 import handleMessage from "./MessageHandler";
 import { closeAll } from "./utils";
 
-export default class Room {
+export class Room {
   ids: IDs;
   storage: DurableObjectStorage;
   blockConcurrencyWhile: DurableObjectState["blockConcurrencyWhile"];
@@ -14,6 +15,7 @@ export default class Room {
   status: RoomStatus = "open";
   isGDPR = true;
   videoLength: number | undefined;
+  videoReady = false;
 
   constructor(state: DurableObjectState, env: Environment) {
     this.ids = {
@@ -31,12 +33,12 @@ export default class Room {
 
   // Private method to connect a user to the room.
   private async connect(req: Request) : Promise<Response> {
-    if(this.status !== "open") return new Response(`Room is ${this.status}`, {status: 503});
+    if(this.status !== "open") return generateErrorResponse(`Room is ${this.status}`, 503);
     const uname = req.headers.get("uname"),
       isOwner = Boolean(req.headers.get("isOwner"));
-    if(!uname) return new Response("No username provided", {status: 400});
-    if(isOwner && this.connections.find(e => e.isOwner)) return new Response("Owner already connected", {status: 400});
-    if(this.connections.find(e => e.uname === uname)) return new Response("Username already connected", {status: 400});
+    if(!uname) return usernameDoesNotExist();
+    if(isOwner && this.connections.find(e => e.isOwner)) return generateErrorResponse("Owner already connected");
+    if(this.connections.find(e => e.uname === uname)) return generateErrorResponse("Username already connected");
     const [client, server] = Object.values(new WebSocketPair());
     server.accept();
     const connection: Connection = {
@@ -50,7 +52,7 @@ export default class Room {
     this.connections.push(connection);
     if(this.connections.length >= this.maxOccupants) {
       this.status = "at capacity";
-      if(!this.ids.external) return new Response("Room has not been started up", {status: 500});
+      if(!this.ids.external) return generateErrorResponse("Room has not been initiated", 500);
       await this.env.KV.put(`${this.env.KVPrefix}-${this.ids.external}`, JSON.stringify({
         status: this.status,
         ownerId: this.ids.external,
@@ -73,11 +75,15 @@ export default class Room {
         if(data.maxOccupants) this.maxOccupants = data.maxOccupants;
         await this.storage.setAlarm(Date.now() + 60000);
         return new Response("OK");
+      case "/ready":
+        this.videoReady = true;
+        return new Response("OK");
       case "/delete":
         await closeAll(this);
         await this.storage.deleteAll();
         return new Response("Room deleted", {status: 200});
       case "/connect":
+        if(!this.videoReady) return generateErrorResponse("Video has not finished processing");
         return this.connect(req);
     }
     return new Response("Invalid Internal URL", {status: 404});

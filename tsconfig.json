@@ -10,6 +10,15 @@
     "noEmit": true,
     "strict": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "./src",
+    "paths": {
+      "utils": ["./Utils"],
+      "analytics": ["./Analytics"],
+      "room": ["./Room"],
+      "stream": ["./Stream"],
+      "routes": ["./Routes"],
+    }
   },
   "include": [
     "src",
