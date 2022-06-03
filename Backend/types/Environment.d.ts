@@ -1,5 +1,5 @@
 declare interface Environment {
-  CFAccountId: string;
+  CFAccountID: string;
   CFAPIToken: string;
   KV: KVNamespace;
   KVPrefix: string;
@@ -7,7 +7,6 @@ declare interface Environment {
   ANALYTICS: DurableObjectNamespace;
   InternalURL: string;
   MaxOccupants: string;
-  ExternalURL: string;
   // Secret for Webhook Verification
   StreamWebhookSecret: string;
   // Signed URL requirements

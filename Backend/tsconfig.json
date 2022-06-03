@@ -18,6 +18,7 @@
       "room": ["./Room"],
       "stream": ["./Stream"],
       "routes": ["./Routes"],
+      "request": ["../types/Request"]
     }
   },
   "include": [

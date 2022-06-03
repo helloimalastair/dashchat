@@ -1,5 +1,5 @@
 import { broadcast, closeAll, updateStatus } from "./utils";
-import type Room from ".";
+import type { Room } from ".";
 
 const decoder = new TextDecoder(),
   errorGenerator = (m: string) => JSON.stringify({time: Date.now(), type: "error", message: m}),

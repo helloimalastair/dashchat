@@ -1,4 +1,4 @@
-import type Room from ".";
+import type { Room } from ".";
 
 export default async function analyticsUpdate(room: Room) {
   if(!room.ids.external) return false;

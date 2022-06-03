@@ -2,6 +2,7 @@ import { generateErrorResponse, usernameDoesNotExist } from "utils";
 import analyticsUpdate from "./AnalyticsUpdate";
 import handleMessage from "./MessageHandler";
 import { closeAll } from "./utils";
+import handleDisconnect from "./ErrorHandler";
 
 export class Room {
   ids: IDs;
@@ -48,6 +49,7 @@ export class Room {
       ws: server,
     };
     server.addEventListener("message", async event => handleMessage(this, connection, event));
+    server.addEventListener("close", () => handleDisconnect(this, connection));
     if(connection.isOwner) this.owner = connection;
     this.connections.push(connection);
     if(this.connections.length >= this.maxOccupants) {
