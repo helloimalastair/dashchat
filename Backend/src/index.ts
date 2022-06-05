@@ -8,10 +8,23 @@ const app = new Hono<Environment>();
 // Add Cookie-Parsing Middleware
 app.use("*", cookie());
 
+// Add CORS
+app.use("*", async (c, next) => {
+  await next();
+  const response = new Response(c.res.body, c.res);
+  response.headers.set("Access-Control-Allow-Origin", "http://localhost");
+  response.headers.set("Access-Control-Allow-Headers", "*");
+  response.headers.set("Access-Control-Allow-Methods", "*");
+  response.headers.set("Access-Control-Allow-Credentials", "*");
+  return response;
+});
+
+// Options Support
+app.options("*", () => new Response("", {status: 204}));
 app.get("/hello", c => c.text("Hello World!"));
 
 // Add Username
-app.get("/identify", identifyUser);
+app.post("/identify", identifyUser);
 
 // Create Room
 app.post("/create", createRoom);
@@ -24,9 +37,6 @@ app.all("/processing/complete", markReady);
 
 // Upgrade to WebSocket
 app.get("/rooms/:id", upgradeToWebSocket);
-
-// Fallback, routes requests to Pages "backend"
-app.notFound(async ({req}) => await fetch(req));
 
 export default app;
 export { Room } from "Room";
