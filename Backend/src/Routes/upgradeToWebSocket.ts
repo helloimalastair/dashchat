@@ -15,7 +15,7 @@ const upgradeToWebSocket: Handler<string, Environment> = async (c, next) => {
   // If room exists, check if room is locked
   if(room.status !== "open") return generateErrorResponse(`Room is ${room.status}`, 403);
   // Reconstruct response to match specification for DO
-  const request = new Request(`${c.env.InternalURL}/connect`, c.req);
+  const request = new Request("https://internal.dashchat.app/connect", c.req);
   // If user has id matching owner, add owner header
   if (room.ids.owner=== c.req.cookie("userId")) request.headers.set("isOwner", "true");
   // Convert uname cookie to header

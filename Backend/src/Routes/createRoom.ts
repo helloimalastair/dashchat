@@ -35,7 +35,7 @@ const createRoom: Handler<string, Environment> = async c => {
     owner,
     doId: doId.toString()
   }));
-  await c.env.ROOMS.get(doId).fetch(new Request(c.env.InternalURL + "/startup", {body: JSON.stringify({
+  await c.env.ROOMS.get(doId).fetch(new Request("https://internal.dashchat.app/startup", {body: JSON.stringify({
     external,
     isGDPR,
     owner,

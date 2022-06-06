@@ -5,7 +5,6 @@ declare interface Environment {
   KVPrefix: string;
   ROOMS: DurableObjectNamespace;
   ANALYTICS: DurableObjectNamespace;
-  InternalURL: string;
   MaxOccupants: string;
   // Secret for Webhook Verification
   StreamWebhookSecret: string;
