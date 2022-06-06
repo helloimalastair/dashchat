@@ -1,5 +1,6 @@
 name = "dashchat"
 compatibility_date = "2022-06-01"
+compatibility_flags = ["durable_object_alarms"]
 main = "dist/worker.js"
 workers_dev = false
 
@@ -18,3 +19,4 @@ bindings = [
 [[migrations]]
 tag = "initialization"
 new_classes = ["Room", "Analytics"]
+
