@@ -49,7 +49,9 @@ export default async function handleMessage(
         room.connections,
         {
           type: "playVideo",
-          data: {},
+          data: {
+            subject: conn.uname,
+          },
         },
         conn
       );

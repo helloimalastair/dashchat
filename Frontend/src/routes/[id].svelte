@@ -79,36 +79,10 @@
 				play('You');
 				ws.send(JSON.stringify({ type: 'playVideo', data: {} }));
 			});
-			// stream.addEventListener('seeked', () => {
-			// 	currentAlert = {
-			// 		type: 'info',
-			// 		event: 'seeked',
-			// 		rawHtml: `<span>Video seeked to ${fancyTimeFormat(stream.currentTime)}. Resuming.</span>`
-			// 	};
-			// 	triggerClose();
-			// });
-			// stream.addEventListener('seeking', () => {
-			// 	currentAlert = {
-			// 		type: 'info',
-			// 		event: 'seeking',
-			// 		rawHtml: `<span><strong>You</strong> seeked the video. Waiting for synchronization...</span>`
-			// 	};
-			// 	if (closeTimeout) {
-			// 		clearTimeout(closeTimeout);
-			// 	}
-			// });
 		});
 		document.head.appendChild(streamScript);
 	});
 </script>
-
-<svelte:head>
-	<script
-		id="stream-script"
-		src="https://embed.videodelivery.net/embed/sdk.latest.js"
-		async
-		defer></script>
-</svelte:head>
 
 <div class="h-[60px] w-full flex justify-center items-center border-b-2 px-8">
 	<a href="/" class="mr-auto group">

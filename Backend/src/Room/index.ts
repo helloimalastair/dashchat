@@ -57,7 +57,9 @@ export class Room {
     server.addEventListener("message", async (event) =>
       handleMessage(this, connection, event)
     );
-    server.addEventListener("close", () => handleDisconnect(this, connection));
+    server.addEventListener("close", () => {
+      this.connections = this.connections.filter((e) => e !== connection);
+    });
 
     // Add the connection to the list.
     this.connections.push(connection);
