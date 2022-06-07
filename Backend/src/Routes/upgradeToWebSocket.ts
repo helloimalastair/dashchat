@@ -49,15 +49,17 @@ const upgradeToWebSocket: Handler<string, Environment> = async (c, next) => {
     const request = new Request("https://internal.dashchat.app/connect", c.req);
 
     // Check if this is the owner.
-    const userId = c.req.cookie("uname");
+    const username = c.req.cookie("uname");
+    const userId = c.req.cookie("userId");
 
-    if (userId === jsonReply.ownerId) {
+    if (username === jsonReply.ownerId) {
       // Set the owner.
       request.headers.set("X-Owner", "true");
     }
 
     // Convert username cookie to a header.
-    request.headers.set("X-Username", userId);
+    request.headers.set("X-Username", username);
+    request.headers.set("X-UserId", userId);
 
     // Send the request to the DO.
     return await stub.fetch(request);

@@ -1,4 +1,5 @@
 declare interface Connection {
+  id: string;
   ws: WebSocket;
   uname: string;
   isOwner: boolean;

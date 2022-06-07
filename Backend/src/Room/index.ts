@@ -17,13 +17,11 @@ export class Room {
   }
 
   private async connect(req: Request): Promise<Response> {
-    // Get the status.
-    const status = await this.state.storage.get("status");
-
     const username = req.headers.get("X-Username");
+    const userId = req.headers.get("X-UserId");
     const isOwner = Boolean(req.headers.get("X-Owner"));
 
-    if (!username) {
+    if (!username || !userId) {
       console.log("Invalid username.");
       return generateErrorResponse("Invalid username");
     }
@@ -48,6 +46,7 @@ export class Room {
 
     // Declare connection.
     const connection: Connection = {
+      id: userId,
       uname: username,
       isOwner,
       ws: server,

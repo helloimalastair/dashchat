@@ -14,6 +14,7 @@
 		rawHtml: string;
 	} | null = null;
 	let closeTimeout: NodeJS.Timeout;
+	let isJSAction: boolean = false;
 
 	function triggerClose() {
 		if (closeTimeout) {
@@ -24,24 +25,22 @@
 		}, 2000);
 	}
 
-	const play = (subject: string) => {
+	const alertPlay = (subject: string) => {
 		currentAlert = {
 			type: 'info',
 			event: 'play',
 			rawHtml: `<span><strong>${subject}</strong> resumed the video.</span>`
 		};
 		triggerClose();
-		stream.play();
 	};
 
-	const pause = (subject: string) => {
+	const alertPause = (subject: string) => {
 		currentAlert = {
 			type: 'info',
 			event: 'play',
 			rawHtml: `<span><strong>${subject}</strong> paused the video.</span>`
 		};
 		triggerClose();
-		stream.pause();
 	};
 
 	onMount(() => {
@@ -51,10 +50,14 @@
 
 			const handler = {
 				pauseVideo: async () => {
-					pause(msg.data.subject);
+					isJSAction = true;
+					alertPause(msg.data.subject);
+					stream.pause();
 				},
 				playVideo: async () => {
-					play(msg.data.subject);
+					isJSAction = true;
+					alertPlay(msg.data.subject);
+					await stream.play();
 				}
 			}[msg.type];
 
@@ -72,11 +75,21 @@
 		streamScript.addEventListener('load', () => {
 			stream = Stream(document.getElementById('stream-player'));
 			stream.addEventListener('pause', () => {
-				pause('You');
+				alertPause('You');
+				if (isJSAction) {
+					isJSAction = false;
+					return;
+				}
+				stream.pause();
 				ws.send(JSON.stringify({ type: 'pauseVideo', data: {} }));
 			});
-			stream.addEventListener('play', () => {
-				play('You');
+			stream.addEventListener('play', async () => {
+				alertPlay('You');
+				if (isJSAction) {
+					isJSAction = false;
+					return;
+				}
+				await stream.play();
 				ws.send(JSON.stringify({ type: 'playVideo', data: {} }));
 			});
 		});

@@ -39,7 +39,9 @@ export default async function handleMessage(
         room.connections,
         {
           type: "pauseVideo",
-          data: {},
+          data: {
+            subject: conn.uname,
+          },
         },
         conn
       );
@@ -56,7 +58,16 @@ export default async function handleMessage(
         conn
       );
     },
-    syncTimecodes: async () => {},
+    syncTimecodes: async () => {
+      broadcast(
+        room.connections,
+        {
+          type: "syncTimecodes",
+          data: payload.data,
+        },
+        conn
+      );
+    },
   }[payload.type];
 
   if (!handler) {

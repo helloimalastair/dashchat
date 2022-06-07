@@ -17,9 +17,9 @@ async function broadcast(
   message: any,
   sender: Connection
 ) {
-  connections.forEach((c) => {
-    if (c.uname !== sender.uname) sendJson(c, message);
-  });
+  for (const conn of connections) {
+    if (conn.id !== sender.id) sendJson(conn, message);
+  }
 }
 
 export { broadcast, closeAll };
