@@ -17,13 +17,14 @@ export class Room {
   isGDPR = true;
   videoLength: number | undefined;
   videoReady = false;
+  alarmCounter = 0;
 
   constructor(state: DurableObjectState, env: Environment) {
     this.ids = {
       do: state.id.toString(),
     };
     this.storage = state.storage;
-    this.blockConcurrencyWhile = state.blockConcurrencyWhile;
+    this.blockConcurrencyWhile = state.blockConcurrencyWhile.bind(state);
     this.env = env;
     this.maxOccupants = Number(env.MaxOccupants);
     this.blockConcurrencyWhile(async () => {
@@ -80,7 +81,6 @@ export class Room {
     const path = new URL(req.url).pathname;
     switch (path) {
       case "/startup":
-        console.log("Received input!");
         const data = (await req.json()) as StartupData;
         this.ids.external = data.external;
         this.ids.owner = data.owner;
@@ -116,6 +116,12 @@ export class Room {
     }
     await this.storage.put("log", this.log);
     analyticsUpdate(this);
-    await this.storage.setAlarm(Date.now() + 25000);
+
+    if (this.alarmCounter < 100) {
+      this.alarmCounter++;
+      await this.storage.setAlarm(Date.now() + 25000);
+    } else {
+      console.log("Exceeded max wait duration.");
+    }
   }
 }

@@ -49,7 +49,8 @@ const createRoom: Handler<string, Environment> = async (c) => {
     })
   );
   console.log("Calling DO!");
-  await c.env.ROOMS.get(doId).fetch(
+  const stub = c.env.ROOMS.get(doId);
+  await stub.fetch(
     new Request("https://internal.dashchat.app/startup", {
       method: "POST",
       headers: {
@@ -77,7 +78,7 @@ const createRoom: Handler<string, Environment> = async (c) => {
   return c.json({
     external,
     isGDPR,
-    uploadLink: generateUploadLink(owner, c.env),
+    uploadLink: await generateUploadLink(owner, c.env),
   });
 };
 
