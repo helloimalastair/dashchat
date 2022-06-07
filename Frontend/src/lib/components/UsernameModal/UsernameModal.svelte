@@ -9,12 +9,15 @@
 	let usernameError: string | null = 'Username cannot be empty';
 
 	onMount(() => {
-		const cookie = getCookieByName('uname', document.cookie);
-		console.log(cookie);
-		if (!cookie) {
-			visible = true;
+		if (document.cookie.length !== 0) {
+			const cookie = getCookieByName('uname', document.cookie);
+			if (!cookie) {
+				visible = true;
+			} else {
+				visible = false;
+			}
 		} else {
-			visible = false;
+			visible = true;
 		}
 	});
 
@@ -52,9 +55,9 @@
 				uname: username
 			})
 		});
-		console.log(await reply.text());
 		if (reply.ok) {
 			visible = false;
+			location.reload();
 		}
 	};
 </script>
