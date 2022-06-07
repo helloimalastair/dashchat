@@ -2,7 +2,8 @@
 	import { tweened, type Tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
-	globalThis.window = {};
+	import nodeWindowPolyfill from 'node-window-polyfill';
+	nodeWindowPolyfill.register(false);
 	import * as tus from 'tus-js-client';
 
 	let uploadProgressPercent: Tweened<number> = tweened(0, {
