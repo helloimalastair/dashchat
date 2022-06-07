@@ -1,12 +1,6 @@
 import { broadcast, sendJson } from "./utils";
 import type { Room } from ".";
 
-const decoder = new TextDecoder(),
-  errorGenerator = (m: string) =>
-    JSON.stringify({ time: Date.now(), type: "error", message: m }),
-  systemGenerator = (m: string) =>
-    JSON.stringify({ time: Date.now(), type: "system", message: m });
-
 export default async function handleMessage(
   room: Room,
   conn: Connection,
@@ -25,12 +19,42 @@ export default async function handleMessage(
       sendJson(conn, { type: "pong", data: {} });
     },
     sendMessage: async () => {
+      const message = {
+        sender: conn.uname,
+        timestamp: Date.now(),
+        message: payload.data.message,
+      };
       broadcast(
         room.connections,
-        { type: "receiveMessage", data: { message: payload.data.message } },
+        {
+          type: "receiveMessage",
+          data: message,
+        },
+        conn
+      );
+      room.messages.push(message);
+    },
+    pauseVideo: async () => {
+      broadcast(
+        room.connections,
+        {
+          type: "pauseVideo",
+          data: {},
+        },
         conn
       );
     },
+    playVideo: async () => {
+      broadcast(
+        room.connections,
+        {
+          type: "playVideo",
+          data: {},
+        },
+        conn
+      );
+    },
+    syncTimecodes: async () => {},
   }[payload.type];
 
   if (!handler) {

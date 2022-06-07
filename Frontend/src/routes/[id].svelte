@@ -4,9 +4,9 @@
 	import { page } from '$app/stores';
 	import { fancyTimeFormat } from '$lib/utils/timeFormatting';
 
+	let stream: any;
 	let ws: WebSocket;
 	let { id } = $page.params;
-	let talking: boolean = false;
 
 	let currentAlert: {
 		type: 'info' | 'error';
@@ -24,14 +24,43 @@
 		}, 2000);
 	}
 
+	const play = (subject: string) => {
+		currentAlert = {
+			type: 'info',
+			event: 'play',
+			rawHtml: `<span><strong>${subject}</strong> resumed the video.</span>`
+		};
+		triggerClose();
+		stream.play();
+	};
+
+	const pause = (subject: string) => {
+		currentAlert = {
+			type: 'info',
+			event: 'play',
+			rawHtml: `<span><strong>${subject}</strong> paused the video.</span>`
+		};
+		triggerClose();
+		stream.pause();
+	};
+
 	onMount(() => {
 		ws = new WebSocket(`wss://api.dashchat.app/rooms/${id}`);
-		ws.onmessage = (message) => {
-			const data = JSON.parse(message.data);
-			console.log(data);
-		};
-		ws.onopen = () => {
-			ws.send(JSON.stringify({ type: 'ping', data: {} }));
+		ws.onmessage = async (event) => {
+			const msg = JSON.parse(event.data) as { type: string; data: any };
+
+			const handler = {
+				pauseVideo: async () => {
+					pause(msg.data.subject);
+				},
+				playVideo: async () => {
+					play(msg.data.subject);
+				}
+			}[msg.type];
+
+			if (handler) {
+				await handler();
+			}
 		};
 
 		setInterval(() => {
@@ -41,45 +70,33 @@
 		const streamScript = document.createElement('script');
 		streamScript.src = 'https://embed.videodelivery.net/embed/sdk.latest.js';
 		streamScript.addEventListener('load', () => {
-			const stream = Stream(document.getElementById('stream-player'));
+			stream = Stream(document.getElementById('stream-player'));
 			stream.addEventListener('pause', () => {
-				currentAlert = {
-					type: 'info',
-					event: 'pause',
-					rawHtml: '<span><strong>You</strong> paused the video.</span>'
-				};
-				triggerClose();
+				pause('You');
+				ws.send(JSON.stringify({ type: 'pauseVideo', data: {} }));
 			});
 			stream.addEventListener('play', () => {
-				// If there is not currently a seek event going on, then we can set the message.
-				// Otherwise the play event overwrites the seek event, which we don't want.
-				if (currentAlert?.event != 'seeking') {
-					currentAlert = {
-						type: 'info',
-						event: 'play',
-						rawHtml: '<span><strong>You</strong> resumed the video.</span>'
-					};
-					triggerClose();
-				}
+				play('You');
+				ws.send(JSON.stringify({ type: 'playVideo', data: {} }));
 			});
-			stream.addEventListener('seeked', () => {
-				currentAlert = {
-					type: 'info',
-					event: 'seeked',
-					rawHtml: `<span>Video seeked to ${fancyTimeFormat(stream.currentTime)}. Resuming.</span>`
-				};
-				triggerClose();
-			});
-			stream.addEventListener('seeking', () => {
-				currentAlert = {
-					type: 'info',
-					event: 'seeking',
-					rawHtml: `<span><strong>You</strong> seeked the video. Waiting for synchronization...</span>`
-				};
-				if (closeTimeout) {
-					clearTimeout(closeTimeout);
-				}
-			});
+			// stream.addEventListener('seeked', () => {
+			// 	currentAlert = {
+			// 		type: 'info',
+			// 		event: 'seeked',
+			// 		rawHtml: `<span>Video seeked to ${fancyTimeFormat(stream.currentTime)}. Resuming.</span>`
+			// 	};
+			// 	triggerClose();
+			// });
+			// stream.addEventListener('seeking', () => {
+			// 	currentAlert = {
+			// 		type: 'info',
+			// 		event: 'seeking',
+			// 		rawHtml: `<span><strong>You</strong> seeked the video. Waiting for synchronization...</span>`
+			// 	};
+			// 	if (closeTimeout) {
+			// 		clearTimeout(closeTimeout);
+			// 	}
+			// });
 		});
 		document.head.appendChild(streamScript);
 	});

@@ -13,9 +13,9 @@ export async function generateUploadLink(
         authorization: env.CFAPIToken,
         "upload-length": size.toString(),
         "tus-resumable": "1.0.0",
-        "upload-metadata": `allowedOrigins WyJkYXNoY2hhdC5hcHAiXQ==,creator ${btoa(
+        "upload-metadata": `allowedOrigins ZGFzaGNoYXQuYXBwCg==,creator ${btoa(
           userID
-        )},requireSignedUrls`,
+        )}`,
         "Content-Type": "application/json",
       },
     }

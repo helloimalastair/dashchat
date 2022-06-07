@@ -1,5 +1,4 @@
 import { generateErrorResponse } from "utils";
-import analyticsUpdate from "./AnalyticsUpdate";
 import handleMessage from "./MessageHandler";
 import { closeAll } from "./utils";
 import handleDisconnect from "./ErrorHandler";
@@ -9,6 +8,8 @@ export class Room {
   state: DurableObjectState;
   owner: Connection | undefined;
   connections: Connection[] = [];
+
+  messages: { sender: string; message: string; timestamp: number }[] = [];
 
   constructor(state: DurableObjectState, env: Environment) {
     this.state = state;
