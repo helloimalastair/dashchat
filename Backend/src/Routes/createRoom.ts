@@ -78,7 +78,7 @@ const createRoom: Handler<string, Environment> = async (c) => {
   return c.json({
     external,
     isGDPR,
-    uploadLink: await generateUploadLink(owner, c.env),
+    uploadLink: await generateUploadLink(owner, body.videoLength, c.env),
   });
 };
 

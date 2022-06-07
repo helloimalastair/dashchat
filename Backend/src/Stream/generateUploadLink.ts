@@ -1,13 +1,17 @@
 import { generateID } from "utils";
 
-export async function generateUploadLink(userID: string, env: Environment) {
+export async function generateUploadLink(
+  userID: string,
+  length: number,
+  env: Environment
+) {
   const uploadLink = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${env.CFAccountID}/stream?direct_user=true`,
     {
       method: "POST",
       headers: {
         authorization: env.CFAPIToken,
-        "upload-length": "21600",
+        "upload-length": Math.round(length + 20).toString(),
         "tus-resumable": "1.0.0",
         "upload-metadata": `allowedOrigins WyJkYXNoY2hhdC5hcHAiXQ==,creator ${btoa(
           userID
