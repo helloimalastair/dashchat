@@ -41,9 +41,21 @@
 		usernameError = null;
 	};
 
-	const submitUsername = () => {
-		// TODO: Submit here.
-		visible = false;
+	const submitUsername = async () => {
+		const reply = await fetch('https://api.dashchat.app/identify', {
+			method: 'POST',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				uname: username
+			})
+		});
+		console.log(await reply.text());
+		if (reply.ok) {
+			visible = false;
+		}
 	};
 </script>
 

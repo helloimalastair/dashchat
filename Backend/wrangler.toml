@@ -7,16 +7,18 @@ workers_dev = false
 route = {pattern = "https://api.dashchat.app/*", zone_name = "dashchat.app"}
 
 kv_namespaces = [
-  {binding = "KV", id = "b67bf7eb75f64392b0c3d7fef8e63079"}
+  {binding = "KV", id = "714a56880545489ebee9ccc5209f116c"}
 ]
 
 [durable_objects]
 bindings = [
-  {name = "ROOMS", class_name = "Room"},
-  {name = "ANALYTICS",class_name = "Analytics"}
+  {name = "ROOMS", class_name = "Room"}
 ]
 
 [[migrations]]
 tag = "initialization"
 new_classes = ["Room", "Analytics"]
 
+[[migrations]]
+tag = "delete_analytics"
+deleted_classes = ["Analytics"]

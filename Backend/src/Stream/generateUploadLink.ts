@@ -2,7 +2,7 @@ import { generateID } from "utils";
 
 export async function generateUploadLink(
   userID: string,
-  length: number,
+  size: number,
   env: Environment
 ) {
   const uploadLink = await fetch(
@@ -11,7 +11,7 @@ export async function generateUploadLink(
       method: "POST",
       headers: {
         authorization: env.CFAPIToken,
-        "upload-length": Math.round(length + 20).toString(),
+        "upload-length": size.toString(),
         "tus-resumable": "1.0.0",
         "upload-metadata": `allowedOrigins WyJkYXNoY2hhdC5hcHAiXQ==,creator ${btoa(
           userID
@@ -27,10 +27,8 @@ export async function generateUploadLink(
   const streamMediaID = uploadLink.headers.get("Stream-Media-Id") as string;
   const uploadLinkURL = uploadLink.headers.get("Location") as string;
 
-  const id = generateID(streamMediaID);
-  await env.KV.put(`${env.KVPrefix}-ProcessingComplete-${id}`, "false");
   return {
     url: uploadLinkURL,
-    id,
+    id: streamMediaID,
   };
 }

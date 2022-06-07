@@ -12,60 +12,65 @@ interface creationBody {
   roomName: string;
   password: string;
   videoLength: number;
+  videoSize: number;
 }
 
 const createRoom: Handler<string, Environment> = async (c) => {
-  if (c.req.headers.get("content-type") !== "application/json")
-    return generateErrorResponse('Content-Type must be "application/json"');
+  // Parse body.
   let body: creationBody;
   try {
     body = await c.req.json();
   } catch (e) {
     return generateErrorResponse("Body must be valid JSON");
   }
+
+  // Get username cookie.
   const uname = c.req.cookie("uname");
-  // Username Verification
-  if (!uname) return usernameDoesNotExist();
-  if (!NameRegex.test(uname))
-    return generateErrorResponse("Username did not pass regex");
-  // Room Name Verification
-  if (!body.roomName) return generateErrorResponse("No room name provided");
-  if (!NameRegex.test(body.roomName))
-    return generateErrorResponse("Room name did not pass regex");
-  console.log("Done validating input!");
-  // User ID
-  const owner = c.req.cookie("userId") || nanoid(),
-    external = generatePhonetic(),
-    isGDPR = c.req.cf?.continent === "EU",
-    doOpts = isGDPR ? { jurisdiction: "EU" } : undefined,
-    doId = c.env.ROOMS.newUniqueId(doOpts);
-  console.log("Putting KV...");
+
+  // Verify username.
+  if (!uname || !NameRegex.test(uname)) {
+    return generateErrorResponse("Invalid username.");
+  }
+
+  // Verify room name.
+  if (!body.roomName || !NameRegex.test(body.roomName)) {
+    return generateErrorResponse("Invalid room name");
+  }
+
+  // Generate IDs.
+  const owner = c.req.cookie("userId") || nanoid();
+  const doId = c.env.ROOMS.newUniqueId({
+    jurisdiction: c.req.cf?.continent === "EU" ? "EU" : undefined,
+  });
+
+  // Generate upload link.
+  const uploadData = await generateUploadLink(owner, body.videoSize, c.env);
+
+  // Do a KV put.
   await c.env.KV.put(
-    `${c.env.KVPrefix}-${external}`,
+    `streamToRoom:${uploadData.id}`,
     JSON.stringify({
-      status: "open",
-      owner,
       doId: doId.toString(),
     })
   );
-  console.log("Calling DO!");
+
+  // Create the room DO.
   const stub = c.env.ROOMS.get(doId);
   await stub.fetch(
     new Request("https://internal.dashchat.app/startup", {
       method: "POST",
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        external,
-        isGDPR,
+        streamId: uploadData.id,
         owner,
         name: body.roomName,
-        videoLength: body.videoLength,
       } as StartupData),
     })
   );
-  console.log("Called DO.");
+
+  // Add a user ID cookie.
   c.cookie("userId", owner, {
     httpOnly: true,
     maxAge: 31622400,
@@ -76,9 +81,10 @@ const createRoom: Handler<string, Environment> = async (c) => {
   });
 
   return c.json({
-    external,
-    isGDPR,
-    uploadLink: await generateUploadLink(owner, body.videoLength, c.env),
+    success: true,
+    streamId: uploadData.id,
+    doId: doId.toString(),
+    uploadLink: uploadData.url,
   });
 };
 

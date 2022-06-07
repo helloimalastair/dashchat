@@ -2,15 +2,19 @@ import { generateErrorResponse, NameRegex } from "utils";
 import type { Handler } from "hono";
 
 const identifyUser: Handler<string, Environment> = async (c) => {
+  // Parse input JSON.
   let uname: string = "";
   try {
     uname = ((await c.req.json()) as any).uname;
   } catch (e) {
     return generateErrorResponse("Invalid JSON");
   }
-  if (!uname) return generateErrorResponse("No username provided");
-  if (!NameRegex.test(uname))
-    return generateErrorResponse("Username did not pass regex");
+
+  // Parse input username.
+  if (!uname || !NameRegex.test(uname))
+    return generateErrorResponse("Invalid username.");
+
+  // Set a username cookie.
   c.cookie("uname", uname, {
     maxAge: 31622400,
     sameSite: "None",
@@ -19,7 +23,8 @@ const identifyUser: Handler<string, Environment> = async (c) => {
     path: "/",
     domain: "dashchat.app",
   });
-  return c.text("OK");
+
+  return c.json({ success: true });
 };
 
 export { identifyUser };

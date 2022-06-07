@@ -1,127 +1,132 @@
-import { generateErrorResponse, usernameDoesNotExist } from "utils";
+import { generateErrorResponse } from "utils";
 import analyticsUpdate from "./AnalyticsUpdate";
 import handleMessage from "./MessageHandler";
 import { closeAll } from "./utils";
 import handleDisconnect from "./ErrorHandler";
 
 export class Room {
-  ids: IDs;
-  storage: DurableObjectStorage;
-  blockConcurrencyWhile: DurableObjectState["blockConcurrencyWhile"];
   env: Environment;
+  state: DurableObjectState;
   owner: Connection | undefined;
   connections: Connection[] = [];
-  maxOccupants: number;
-  log: any[] = [];
-  status: RoomStatus = "open";
-  isGDPR = true;
-  videoLength: number | undefined;
-  videoReady = false;
-  alarmCounter = 0;
 
   constructor(state: DurableObjectState, env: Environment) {
-    this.ids = {
-      do: state.id.toString(),
-    };
-    this.storage = state.storage;
-    this.blockConcurrencyWhile = state.blockConcurrencyWhile.bind(state);
+    this.state = state;
     this.env = env;
-    this.maxOccupants = Number(env.MaxOccupants);
-    this.blockConcurrencyWhile(async () => {
-      const status = await this.storage.get<RoomStatus>("status");
-      if (status) this.status = status;
-    });
   }
 
-  // Private method to connect a user to the room.
   private async connect(req: Request): Promise<Response> {
-    if (this.status !== "open")
-      return generateErrorResponse(`Room is ${this.status}`, 503);
-    const uname = req.headers.get("uname"),
-      isOwner = Boolean(req.headers.get("isOwner"));
-    if (!uname) return usernameDoesNotExist();
-    if (isOwner && this.connections.find((e) => e.isOwner))
+    // Get the status.
+    const status = await this.state.storage.get("status");
+
+    const username = req.headers.get("X-Username");
+    const isOwner = Boolean(req.headers.get("X-Owner"));
+
+    if (!username) {
+      console.log("Invalid username.");
+      return generateErrorResponse("Invalid username");
+    }
+
+    // Verify that this is the only owner.
+    if (isOwner && this.connections.find((e) => e.isOwner)) {
+      console.log("Owner already connected!");
       return generateErrorResponse("Owner already connected");
-    if (this.connections.find((e) => e.uname === uname))
-      return generateErrorResponse("Username already connected");
+    }
+    if (this.connections.find((e) => e.uname === username)) {
+      // Kick the existing user.
+      const connection = this.connections.find((e) => e.uname === username);
+      if (connection) {
+        connection.ws.close();
+        this.connections = this.connections.filter((e) => e !== connection);
+      }
+    }
+
+    // Accept the WebSocket connection.
     const [client, server] = Object.values(new WebSocketPair());
     server.accept();
+
+    // Declare connection.
     const connection: Connection = {
-      uname,
+      uname: username,
       isOwner,
-      location: req.cf?.country,
       ws: server,
     };
+
+    // Attach handlers.
     server.addEventListener("message", async (event) =>
       handleMessage(this, connection, event)
     );
     server.addEventListener("close", () => handleDisconnect(this, connection));
-    if (connection.isOwner) this.owner = connection;
+
+    // Add the connection to the list.
     this.connections.push(connection);
-    if (this.connections.length >= this.maxOccupants) {
-      this.status = "at capacity";
-      if (!this.ids.external)
-        return generateErrorResponse("Room has not been initiated", 500);
-      await this.env.KV.put(
-        `${this.env.KVPrefix}-${this.ids.external}`,
-        JSON.stringify({
-          status: this.status,
-          ownerId: this.ids.external,
-          doId: this.ids.do,
-        })
-      );
+    if (this.connections.length >= Number(this.env.MaxOccupants || Infinity)) {
+      await this.state.storage.put("status", "at_capacity");
     }
-    return new Response("Upgrade in progress", {
+
+    // Upgrade the connection.
+    return new Response(null, {
       status: 101,
       webSocket: client,
     });
   }
 
   async fetch(req: Request): Promise<Response> {
-    const path = new URL(req.url).pathname;
-    switch (path) {
-      case "/startup":
+    const pathname = new URL(req.url).pathname;
+
+    // Used this pattern rather than switch statements to avoid errors
+    // when using the same variable names.
+    const handler = {
+      "/startup": async () => {
+        // Parse input data.
         const data = (await req.json()) as StartupData;
-        this.ids.external = data.external;
-        this.ids.owner = data.owner;
-        this.ids.name = data.name;
-        this.isGDPR = data.isGDPR;
-        this.videoLength = data.videoLength;
-        if (data.maxOccupants) this.maxOccupants = data.maxOccupants;
-        await this.storage.setAlarm(Date.now() + 25000);
+
+        // Set storage keys.
+        this.state.storage.put("status", "processing");
+        this.state.storage.put("ownerId", data.owner);
+        await this.state.storage.put("streamId", data.streamId);
+
         return new Response("OK");
-      case "/ready":
-        this.videoReady = true;
+      },
+      "/set-status": async () => {
+        // Parse input data.
+        const status = (await req.json()) as {
+          status: string;
+        };
+
+        // Set storage keys.
+        await this.state.storage.put("status", status.status);
+
         return new Response("OK");
-      case "/delete":
-        await closeAll(this);
-        await this.storage.deleteAll();
-        return new Response("Room deleted", { status: 200 });
-      case "/connect":
-        if (!this.videoReady)
+      },
+      "/get-status": async () => {
+        // Get status.
+        const status = (await this.state.storage.get("status")) as string;
+        const ownerId = (await this.state.storage.get("ownerId")) as string;
+        const streamId = (await this.state.storage.get("streamId")) as string;
+        const numberOfConnections = this.connections.length;
+
+        return new Response(
+          JSON.stringify({ status, ownerId, streamId, numberOfConnections })
+        );
+      },
+      "/connect": async () => {
+        console.log("Connect received, connecting...");
+        // Get status.
+        const status = (await this.state.storage.get("status")) as string;
+        if (status !== "ready") {
+          console.log("Room not ready!");
           return generateErrorResponse("Video has not finished processing");
-        return this.connect(req);
-    }
-    return new Response("Invalid Internal URL", { status: 404 });
-  }
+        } else {
+          return await this.connect(req);
+        }
+      },
+    }[pathname];
 
-  async alarm() {
-    if (this.status === "ended") {
-      await this.env.KV.put(
-        `${this.env.KVPrefix}-${this.ids.external}-log`,
-        JSON.stringify(this.log),
-        { metadata: { owner: this.ids.owner } }
-      );
-      return await this.storage.deleteAll();
-    }
-    await this.storage.put("log", this.log);
-    analyticsUpdate(this);
-
-    if (this.alarmCounter < 100) {
-      this.alarmCounter++;
-      await this.storage.setAlarm(Date.now() + 25000);
+    if (handler) {
+      return await handler();
     } else {
-      console.log("Exceeded max wait duration.");
+      return new Response("Not Found", { status: 404 });
     }
   }
 }
