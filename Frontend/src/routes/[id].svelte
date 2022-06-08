@@ -51,6 +51,10 @@
 	};
 
 	const sendMessage = () => {
+		if (!currentMessage.length) {
+			return;
+		}
+
 		ws.send(JSON.stringify({ type: 'sendMessage', data: { message: currentMessage } }));
 		currentMessage = '';
 	};
@@ -163,15 +167,16 @@
 		<div class="h-[450px] flex flex-col justify-start items-center">
 			<form
 				on:submit|preventDefault={sendMessage}
-				class="flex flex-col justify-end items-center bg-light-100 rounded-lg shadow border w-[300px] h-[450px] mx-4"
+				class="flex flex-col justify-end items-start bg-light-100 rounded-lg shadow border w-[300px] h-[450px] mx-4"
 			>
-				<span class="mb-auto mt-2 font-bold text-lg">Chat</span>
+				<span class="mb-auto mx-auto mt-2 font-bold text-lg">Chat</span>
 				{#each messages as message}
 					<span class="text-gray-500 font-bold text-xs mb-1 mt-2">{message.sender}</span>
 					<div class="rounded shadow bg-gray-200 px-4 py-2 mx-2 mb-2">{message.message}</div>
 				{/each}
 				<input
 					type="text"
+					bind:value={currentMessage}
 					class="h-full w-full rounded-b-lg px-2 py-1 border-t h-[40px] outline-none focus:bg-blue-400 focus:bg-opacity-10 transition"
 					placeholder="Type a message..."
 				/>
