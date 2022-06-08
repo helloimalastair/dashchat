@@ -11,4 +11,6 @@ declare interface Environment {
   // Signed URL requirements
   StreamSignatureID: string;
   StreamSignatureJWK: string;
+  // R2 bucket for example video.
+  R2: R2Bucket;
 }

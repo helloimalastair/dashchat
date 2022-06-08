@@ -197,5 +197,14 @@
 				class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
 			/>
 		</button>
+
+		<span class="mt-8 font-bold">Don't have a video? Download an example:</span>
+		<a
+			href="https://api.dashchat.app/example-video"
+			download="example-video.mp4"
+			class="w-80 px-4 py-2 bg-blue-400 rounded hover:bg-white text-white hover:text-black transition border border-blue-400 shadow"
+		>
+			Download Example
+		</a>
 	{/if}
 </div>

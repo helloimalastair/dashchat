@@ -10,6 +10,10 @@ kv_namespaces = [
   {binding = "KV", id = "714a56880545489ebee9ccc5209f116c"}
 ]
 
+[[r2_buckets]]
+binding = 'R2'
+bucket_name = 'dashchat'
+
 [durable_objects]
 bindings = [
   {name = "ROOMS", class_name = "Room"}

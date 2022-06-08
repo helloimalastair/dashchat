@@ -1,6 +1,7 @@
 import { Context, Hono } from "hono";
 import { cookie } from "hono/cookie";
 import { createRoom, identifyUser, upgradeToWebSocket } from "routes";
+import { exampleVideo } from "Routes/exampleVideo.js";
 import { awaitReady, markReady } from "stream";
 
 const app = new Hono<Environment>();
@@ -50,6 +51,8 @@ app.all("/processing/complete", markReady);
 
 // Upgrade to WebSocket
 app.get("/rooms/:id", upgradeToWebSocket);
+
+app.get("/example-video", exampleVideo);
 
 export default app;
 export { Room } from "Room";
