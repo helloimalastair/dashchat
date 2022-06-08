@@ -18,6 +18,7 @@
 	} | null = null;
 	let closeTimeout: NodeJS.Timeout;
 	let timeLastSent: number = 0;
+	let lastJsEvent: number = 0;
 
 	let isOwner: boolean = false;
 	let isJSAction: boolean = false;
@@ -65,8 +66,8 @@
 			timeout: 5e3,
 			maxAttempts: 10,
 			onclose: (e) => {
-				console.log("Websocket closed:", e)
-			}
+				console.log('Websocket closed:', e);
+			},
 			onmessage: async (event) => {
 				const msg = JSON.parse(event.data) as { type: string; data: any };
 
@@ -78,12 +79,12 @@
 						}
 					},
 					pauseVideo: async () => {
-						isJSAction = true;
+						lastJsEvent = Date.now();
 						alertPause(msg.data.subject);
 						stream.pause();
 					},
 					playVideo: async () => {
-						isJSAction = true;
+						lastJsEvent = Date.now();
 						alertPlay(msg.data.subject);
 						stream.play();
 					},
@@ -105,6 +106,7 @@
 		setInterval(() => {
 			if (Date.now() - timeLastSent > 10000) {
 				ws.send(JSON.stringify({ type: 'ping' }));
+				timeLastSent = Date.now();
 			}
 		}, 2000);
 
@@ -113,8 +115,7 @@
 		streamScript.addEventListener('load', () => {
 			stream = Stream(document.getElementById('stream-player'));
 			stream.addEventListener('pause', () => {
-				if (isJSAction) {
-					isJSAction = false;
+				if (Date.now() - lastJsEvent < 100) {
 					return;
 				}
 				alertPause('You');
@@ -123,8 +124,7 @@
 				stream.pause();
 			});
 			stream.addEventListener('play', async () => {
-				if (isJSAction) {
-					isJSAction = false;
+				if (Date.now() - lastJsEvent < 100) {
 					return;
 				}
 				alertPlay('You');
