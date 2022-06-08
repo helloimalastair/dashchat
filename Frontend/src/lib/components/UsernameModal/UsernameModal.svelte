@@ -9,6 +9,11 @@
 	let usernameError: string | null = 'Username cannot be empty';
 
 	onMount(() => {
+		if (location.host == 'localhost:3000') {
+			visible = false;
+			return;
+		}
+
 		if (document.cookie.length !== 0) {
 			const cookie = getCookieByName('uname', document.cookie);
 			if (!cookie) {
