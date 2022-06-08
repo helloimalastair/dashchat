@@ -137,7 +137,7 @@
 	});
 </script>
 
-<div class="h-[60px] w-full flex justify-center items-center border-b-2 px-8">
+<div class="h-[70px] w-full flex justify-center items-center border-b-2 px-8">
 	<a href="/" class="mr-auto group">
 		<svg
 			class="text-4xl transform group-hover:-translate-x-1 transition"
@@ -159,9 +159,15 @@
 			/>
 		</svg>
 	</a>
-	<h1 class="text-xl mr-auto"><strong>Room:</strong> {id}</h1>
+	<div class="flex flex-col justify-center items-center mr-auto">
+		<h1 class="text-xl text-center font-bold text-2xl mb-1">DashChat</h1>
+		<h2 class="text-xs">https://dashchat.app/{id}</h2>
+	</div>
 </div>
-<div class="flex flex-col justify-start items-center mt-12 h-full">
+<div
+	style={`height: calc(100vh - 70px); background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('https://videodelivery.net/${id}/thumbnails/thumbnail.jpg?time=0s&height=270') no-repeat center center; background-size: cover;`}
+	class="flex flex-col justify-start items-center pt-12"
+>
 	<div class="flex justify-center items-center">
 		<iframe
 			title="Video"
@@ -200,8 +206,8 @@
 		{#if currentAlert != null}
 			<div
 				class="w-[920px] flex items-center mr-4 rounded-full mt-4 p-4 bg-blue-100"
-				out:fly={{ y: 20 }}
-				in:fly={{ y: -20 }}
+				out:fly={{ y: 20, duration: 200 }}
+				in:fly={{ y: -20, duration: 200 }}
 			>
 				{#if currentAlert.type === 'info'}
 					<svg
@@ -226,7 +232,7 @@
 				{@html currentAlert.rawHtml}
 			</div>
 		{:else}
-			<div class="w-[920px] mr-4 rounded-full mt-4 p-4" />
+			<div class="w-[920px] mr-4 rounded-full mt-4 p-4" in:fly={{ delay: 200, duration: 200 }} />
 		{/if}
 		<button
 			on:click|preventDefault={() => {
