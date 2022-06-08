@@ -1,11 +1,6 @@
 import { nanoid } from "nanoid";
 import { generateUploadLink } from "stream";
-import {
-  generateErrorResponse,
-  generatePhonetic,
-  NameRegex,
-  usernameDoesNotExist,
-} from "utils";
+import { generateErrorResponse, generatePhonetic, NameRegex } from "utils";
 import type { Handler } from "hono";
 
 interface creationBody {

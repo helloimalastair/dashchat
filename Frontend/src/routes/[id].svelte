@@ -178,7 +178,7 @@
 				class="flex flex-col justify-end items-start bg-light-100 rounded-lg shadow border w-[300px] h-[450px] mx-4"
 			>
 				<span class="mb-auto mx-auto mt-2 font-bold text-lg">Chat</span>
-				<div class="flex flex-col justify-end items-start overflow-y-scroll">
+				<div class="flex flex-col justify-end items-start w-full h-full overflow-y-scroll">
 					{#each messages as message}
 						<span class="text-gray-500 font-bold text-xs mb-1 mt-2 ml-2"
 							>{message.sender} - {new Date(message.timestamp).toLocaleTimeString()}</span
