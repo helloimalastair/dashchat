@@ -99,7 +99,7 @@
 		});
 
 		setInterval(() => {
-			ws.send(JSON.stringify({ type: 'ping', data: { message: currentMessage } }));
+			ws.send(JSON.stringify({ type: 'ping' }));
 		}, 5000);
 
 		const streamScript = document.createElement('script');
@@ -171,7 +171,9 @@
 			>
 				<span class="mb-auto mx-auto mt-2 font-bold text-lg">Chat</span>
 				{#each messages as message}
-					<span class="text-gray-500 font-bold text-xs mb-1 mt-2">{message.sender}</span>
+					<span class="text-gray-500 font-bold text-xs mb-1 mt-2 ml-2"
+						>{message.sender} - {new Date(message.timestamp).toLocaleTimeString()}</span
+					>
 					<div class="rounded shadow bg-gray-200 px-4 py-2 mx-2 mb-2">{message.message}</div>
 				{/each}
 				<input
