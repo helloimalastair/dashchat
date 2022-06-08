@@ -1,4 +1,4 @@
-import { broadcast, sendJson } from "./utils";
+import { broadcast, broadcastAll, sendJson } from "./utils";
 import type { Room } from ".";
 
 export default async function handleMessage(
@@ -24,15 +24,10 @@ export default async function handleMessage(
         timestamp: Date.now(),
         message: payload.data.message,
       };
-      broadcast(
-        room.connections,
-        {
-          type: "receiveMessage",
-          data: message,
-        },
-        conn
-      );
-      room.messages.push(message);
+      broadcastAll(room, {
+        type: "receiveMessage",
+        data: message,
+      });
     },
     pauseVideo: async () => {
       broadcast(

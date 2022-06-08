@@ -22,4 +22,10 @@ async function broadcast(
   }
 }
 
-export { broadcast, closeAll };
+async function broadcastAll(room: Room, message: any) {
+  for (const conn of room.connections) {
+    sendJson(conn, message);
+  }
+}
+
+export { broadcast, broadcastAll, closeAll };

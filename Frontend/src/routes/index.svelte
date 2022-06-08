@@ -109,7 +109,7 @@
 			if (jsonReply.success && jsonReply.status === 'ready') {
 				if (Notification.permission === 'granted') {
 					const notification = new Notification('DashChat', {
-						data: 'Processing of your video is complete!'
+						body: 'Processing of your video is complete!'
 					});
 				}
 				status = 'done';
@@ -132,7 +132,7 @@
 		<p class="w-80 text-center mt-4 mb-8">DONE.</p>
 	{:else if status === 'processing'}
 		<p class="w-80 text-center mt-4 mb-8 font-bold">Processing...</p>
-		<span class="text-sm w-80">
+		<span class="text-sm w-80 text-center">
 			This may take a few minutes, depending on the length of your video. To get a notification when
 			finished, click "Allow" on the popup.
 		</span>
