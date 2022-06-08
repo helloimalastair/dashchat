@@ -115,7 +115,7 @@
 		streamScript.addEventListener('load', () => {
 			stream = Stream(document.getElementById('stream-player'));
 			stream.addEventListener('pause', () => {
-				if (Date.now() - lastJsEvent < 100) {
+				if (Date.now() - lastJsEvent < 30) {
 					return;
 				}
 				alertPause('You');
@@ -124,7 +124,7 @@
 				stream.pause();
 			});
 			stream.addEventListener('play', async () => {
-				if (Date.now() - lastJsEvent < 100) {
+				if (Date.now() - lastJsEvent < 30) {
 					return;
 				}
 				alertPlay('You');
