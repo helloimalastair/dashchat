@@ -202,7 +202,7 @@
 		<a
 			href="https://api.dashchat.app/example-video"
 			download="example-video.mp4"
-			class="w-80 px-4 py-2 bg-blue-400 rounded hover:bg-white text-white hover:text-black transition border border-blue-400 shadow"
+			class="w-80 px-4 py-2 mt-2 bg-blue-400 rounded-lg hover:bg-white text-white hover:text-black transition border border-blue-400 shadow"
 		>
 			Download Example
 		</a>

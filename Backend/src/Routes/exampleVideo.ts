@@ -1,13 +1,14 @@
 import type { Handler } from "hono";
 
 const exampleVideo: Handler<string, Environment> = async (c) => {
-  const object = await c.env.R2.get("/example-video.mp4");
-  const blob = await object?.blob();
-  return new Response(blob, {
-    headers: {
-      "Content-Type": "video/mp4",
-      "Content-Disposition": "inline; filename=example-video.mp4",
-    },
+  const object = (await c.env.R2.get("example-video.mp4")) as R2ObjectBody;
+  console.log(object.size);
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("Content-Disposition", "attachment; filename=example-video.mp4");
+  return new Response(object.body, {
+    headers,
+    status: 200,
   });
 };
 

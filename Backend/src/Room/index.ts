@@ -35,7 +35,7 @@ export class Room {
       // Kick the existing user.
       const connection = this.connections.find((e) => e.uname === username);
       if (connection) {
-        connection.ws.close();
+        connection.ws.close(1000);
         this.connections = this.connections.filter((e) => e !== connection);
       }
     }
@@ -53,17 +53,15 @@ export class Room {
     };
 
     // Attach handlers.
-    server.addEventListener("message", async (event) =>
-      handleMessage(this, connection, event)
+    server.addEventListener(
+      "message",
+      async (event) => await handleMessage(this, connection, event)
     );
     server.addEventListener("close", () => {
       this.connections = this.connections.filter((e) => e !== connection);
     });
-    server.addEventListener("open", async () => {
-      console.log("Fired onOpen!");
-      server.send(
-        JSON.stringify({ type: "welcome", data: { owner: isOwner } })
-      );
+    server.addEventListener("error", async () => {
+      this.connections = this.connections.filter((e) => e !== connection);
     });
 
     // Add the connection to the list.
