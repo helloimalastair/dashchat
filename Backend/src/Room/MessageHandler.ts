@@ -54,14 +54,10 @@ export default async function handleMessage(
       );
     },
     syncTimecodes: async () => {
-      broadcast(
-        room.connections,
-        {
-          type: "syncTimecodes",
-          data: payload.data,
-        },
-        conn
-      );
+      broadcastAll(room, {
+        type: "syncTimecodes",
+        data: payload.data,
+      });
     },
   }[payload.type];
 

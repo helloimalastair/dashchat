@@ -17,11 +17,9 @@
 		rawHtml: string;
 	} | null = null;
 	let closeTimeout: NodeJS.Timeout;
+	let timeLastSent: number = 0;
 
 	let isOwner: boolean = false;
-	let isFirstPlay: boolean = true;
-
-	let currentTimeReceived: number = 0;
 	let isJSAction: boolean = false;
 
 	const triggerClose = () => {
@@ -53,17 +51,22 @@
 		}
 
 		ws.send(JSON.stringify({ type: 'sendMessage', data: { message: currentMessage } }));
+		timeLastSent = Date.now();
 		currentMessage = '';
 	};
 
 	const syncTime = () => {
 		ws.send(JSON.stringify({ type: 'syncTimecodes', data: { time: stream.currentTime } }));
+		timeLastSent = Date.now();
 	};
 
 	onMount(() => {
 		ws = new Sockette(`wss://api.dashchat.app/rooms/${id}`, {
 			timeout: 5e3,
 			maxAttempts: 10,
+			onclose: (e) => {
+				console.log("Websocket closed:", e)
+			}
 			onmessage: async (event) => {
 				const msg = JSON.parse(event.data) as { type: string; data: any };
 
@@ -100,8 +103,10 @@
 		});
 
 		setInterval(() => {
-			ws.send(JSON.stringify({ type: 'ping' }));
-		}, 5000);
+			if (Date.now() - timeLastSent > 10000) {
+				ws.send(JSON.stringify({ type: 'ping' }));
+			}
+		}, 2000);
 
 		const streamScript = document.createElement('script');
 		streamScript.src = 'https://embed.videodelivery.net/embed/sdk.latest.js';
@@ -114,6 +119,7 @@
 				}
 				alertPause('You');
 				ws.send(JSON.stringify({ type: 'pauseVideo', data: {} }));
+				timeLastSent = Date.now();
 				stream.pause();
 			});
 			stream.addEventListener('play', async () => {
@@ -123,6 +129,7 @@
 				}
 				alertPlay('You');
 				ws.send(JSON.stringify({ type: 'playVideo', data: {} }));
+				timeLastSent = Date.now();
 				await stream.play();
 			});
 		});
@@ -171,12 +178,14 @@
 				class="flex flex-col justify-end items-start bg-light-100 rounded-lg shadow border w-[300px] h-[450px] mx-4"
 			>
 				<span class="mb-auto mx-auto mt-2 font-bold text-lg">Chat</span>
-				{#each messages as message}
-					<span class="text-gray-500 font-bold text-xs mb-1 mt-2 ml-2"
-						>{message.sender} - {new Date(message.timestamp).toLocaleTimeString()}</span
-					>
-					<div class="rounded shadow bg-gray-200 px-4 py-2 mx-2 mb-2">{message.message}</div>
-				{/each}
+				<div class="flex flex-col justify-end items-start overflow-y-scroll">
+					{#each messages as message}
+						<span class="text-gray-500 font-bold text-xs mb-1 mt-2 ml-2"
+							>{message.sender} - {new Date(message.timestamp).toLocaleTimeString()}</span
+						>
+						<div class="rounded shadow bg-gray-200 px-4 py-2 mx-2 mb-2">{message.message}</div>
+					{/each}
+				</div>
 				<input
 					type="text"
 					bind:value={currentMessage}
