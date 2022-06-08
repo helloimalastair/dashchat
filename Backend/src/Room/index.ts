@@ -1,6 +1,6 @@
 import { generateErrorResponse } from "utils";
 import handleMessage from "./MessageHandler";
-import { closeAll } from "./utils";
+import { closeAll, sendJson } from "./utils";
 import handleDisconnect from "./ErrorHandler";
 
 export class Room {
@@ -58,6 +58,12 @@ export class Room {
     );
     server.addEventListener("close", () => {
       this.connections = this.connections.filter((e) => e !== connection);
+    });
+    server.addEventListener("open", async () => {
+      console.log("Fired onOpen!");
+      server.send(
+        JSON.stringify({ type: "welcome", data: { owner: isOwner } })
+      );
     });
 
     // Add the connection to the list.

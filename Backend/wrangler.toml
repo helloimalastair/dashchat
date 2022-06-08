@@ -22,3 +22,11 @@ new_classes = ["Room", "Analytics"]
 [[migrations]]
 tag = "delete_analytics"
 deleted_classes = ["Analytics"]
+
+[[migrations]]
+tag = "remove_alarms_part_1"
+deleted_classes = ["Room"]
+
+[[migrations]]
+tag = "remove_alarms_part_2"
+new_classes = ["Room"]

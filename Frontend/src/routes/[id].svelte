@@ -3,9 +3,10 @@
 	import { fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { fancyTimeFormat } from '$lib/utils/timeFormatting';
+	import Sockette from 'sockette';
 
 	let stream: any;
-	let ws: WebSocket;
+	let ws: Sockette;
 	let { id } = $page.params;
 
 	let currentAlert: {
@@ -14,6 +15,9 @@
 		rawHtml: string;
 	} | null = null;
 	let closeTimeout: NodeJS.Timeout;
+	let isOwner: boolean = false;
+	let isFirstPlay: boolean = true;
+	let currentTimeReceived: number = 0;
 	let isJSAction: boolean = false;
 
 	function triggerClose() {
@@ -44,53 +48,63 @@
 	};
 
 	onMount(() => {
-		ws = new WebSocket(`wss://api.dashchat.app/rooms/${id}`);
-		ws.onmessage = async (event) => {
-			const msg = JSON.parse(event.data) as { type: string; data: any };
+		ws = new Sockette(`wss://api.dashchat.app/rooms/${id}`, {
+			onmessage: async (event) => {
+				const msg = JSON.parse(event.data) as { type: string; data: any };
 
-			const handler = {
-				pauseVideo: async () => {
-					isJSAction = true;
-					alertPause(msg.data.subject);
-					stream.pause();
-				},
-				playVideo: async () => {
-					isJSAction = true;
-					alertPlay(msg.data.subject);
-					await stream.play();
+				const handler = {
+					welcome: async () => {
+						if (msg.data.isOwner) {
+							isOwner = true;
+							console.log('You are the OWNER!');
+						}
+					},
+					pauseVideo: async () => {
+						isJSAction = true;
+						alertPause(msg.data.subject);
+						stream.pause();
+					},
+					playVideo: async () => {
+						isJSAction = true;
+						alertPlay(msg.data.subject);
+						stream.play();
+					},
+					syncTimecodes: async () => {
+						currentTimeReceived = msg.data.time;
+					}
+				}[msg.type];
+
+				if (handler) {
+					await handler();
 				}
-			}[msg.type];
-
-			if (handler) {
-				await handler();
 			}
-		};
+		});
 
 		setInterval(() => {
 			ws.send(JSON.stringify({ type: 'ping', data: {} }));
-		}, 5000 + Math.random() * 1000);
+		}, 5000);
 
 		const streamScript = document.createElement('script');
 		streamScript.src = 'https://embed.videodelivery.net/embed/sdk.latest.js';
 		streamScript.addEventListener('load', () => {
 			stream = Stream(document.getElementById('stream-player'));
 			stream.addEventListener('pause', () => {
-				alertPause('You');
 				if (isJSAction) {
 					isJSAction = false;
 					return;
 				}
-				stream.pause();
+				alertPause('You');
 				ws.send(JSON.stringify({ type: 'pauseVideo', data: {} }));
+				stream.pause();
 			});
 			stream.addEventListener('play', async () => {
-				alertPlay('You');
 				if (isJSAction) {
 					isJSAction = false;
 					return;
 				}
-				await stream.play();
+				alertPlay('You');
 				ws.send(JSON.stringify({ type: 'playVideo', data: {} }));
+				await stream.play();
 			});
 		});
 		document.head.appendChild(streamScript);
@@ -119,10 +133,9 @@
 			/>
 		</svg>
 	</a>
-	<h1 class="text-xl mr-auto"><strong>Room:</strong> 123</h1>
+	<h1 class="text-xl mr-auto"><strong>Room:</strong> {id}</h1>
 </div>
 <div class="flex flex-col justify-start items-center mt-12 h-full">
-	<span class="mr-[300px] mb-4 text-left font-bold text-xl">Room: {id}</span>
 	<div class="flex justify-center items-center">
 		<iframe
 			title="Video"
