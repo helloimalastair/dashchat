@@ -15,6 +15,7 @@ Our submission for the [2022 Cloudflare Spring Developers Challenge](https://cha
 - 💿 Cloudflare KV, for storing non-realtime data
 - 🎥 Cloudflare Stream, for the video
 - ⚡️ Cloudflare Pages, for the frontend
+- 🪣 Cloudflare R2, for storing an example video file
 
 Want to connect with us?
 Head over to the [Cloudflare Developers Discord](https://discord.gg/cloudflaredev) for info and help on Cloudflare products and to talk with us about DashChat!
