@@ -49,6 +49,8 @@
 
 	onMount(() => {
 		ws = new Sockette(`wss://api.dashchat.app/rooms/${id}`, {
+			timeout: 5e3,
+			maxAttempts: 10,
 			onmessage: async (event) => {
 				const msg = JSON.parse(event.data) as { type: string; data: any };
 
